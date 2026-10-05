@@ -9,8 +9,18 @@ import Message from './models/Message.js';
 const app = express();
 const port = process.env.PORT || 5000;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const allowedOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL, methods: ['GET', 'POST'] }));
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    methods: ['GET', 'POST']
+  })
+);
 app.use(express.json({ limit: '10kb' }));
 app.get('/api/health', (_request, response) => response.json({ ok: true }));
 const contactLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Too many messages. Please try again later.' } });
